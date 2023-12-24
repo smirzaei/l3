@@ -1,8 +1,8 @@
-use std::io;
+use std::io::{self, ErrorKind};
 
 use tokio::{
-    io::AsyncReadExt,
-    net::{TcpListener, TcpStream},
+    io::{AsyncReadExt, AsyncWrite},
+    net::TcpListener,
 };
 use tracing::{error, info, warn};
 
@@ -21,14 +21,21 @@ async fn main() -> io::Result<()> {
             Ok((socket, addr)) => {
                 tokio::spawn(async move {
                     info!(address = addr.to_string(), "new connection");
-                    handle_connection(socket).await;
+                    match handle_connection(socket).await {
+                        Err(e) if e.kind() == ErrorKind::UnexpectedEof => {
+                            info!(address = addr.to_string(), "client disconnected");
+                        }
+                        _ => {}
+                    }
                 });
             }
         }
     }
 }
 
-async fn handle_connection(mut socket: TcpStream) -> io::Result<()> {
+async fn handle_connection<S: AsyncReadExt + AsyncWrite + std::marker::Unpin>(
+    mut stream: S,
+) -> io::Result<()> {
     const MAX_PAYLOAD_SIZE: usize = 32;
     let mut buffer: [u8; MAX_PAYLOAD_SIZE] = [0; MAX_PAYLOAD_SIZE];
     let mut n: usize;
@@ -36,7 +43,7 @@ async fn handle_connection(mut socket: TcpStream) -> io::Result<()> {
     loop {
         // n = socket.read_exact(&mut buffer[0..4]).await?;
         // let payload_size = u32::from_le_bytes(buffer[0..4].try_into().unwrap());
-        let payload_size = socket.read_u32_le().await? as usize;
+        let payload_size = stream.read_u32_le().await? as usize;
         info!(payload_size);
         if payload_size > MAX_PAYLOAD_SIZE {
             warn!(
@@ -50,7 +57,7 @@ async fn handle_connection(mut socket: TcpStream) -> io::Result<()> {
             ));
         }
 
-        n = socket.read_exact(&mut buffer[0..payload_size]).await?;
+        n = stream.read_exact(&mut buffer[0..payload_size]).await?;
         info!(n, a = format!("{buffer:?}"));
     }
 }
