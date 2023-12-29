@@ -190,6 +190,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d77f7ec81a6d05a3abb01ab6eb7590f6083d08449fe5a1c8b1e620283546ccb7"
 
 [[package]]
+name = "humanize-rs"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "016b02deb8b0c415d8d56a6f0ab265e50c22df61194e37f9be75ed3a722de8a6"
+
+[[package]]
 name = "indexmap"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -205,7 +211,9 @@ version = "0.1.0"
 dependencies = [
  "bytes",
  "clap",
+ "humanize-rs",
  "serde",
+ "serde-humanize-rs",
  "tokio",
  "toml",
  "tracing",
@@ -382,6 +390,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25dd9975e68d0cb5aa1120c288333fc98731bd1dd12f561e468ea4728c042b89"
 dependencies = [
  "serde_derive",
+]
+
+[[package]]
+name = "serde-humanize-rs"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d32dda2253dd72722af02a6c2140dc32d247a54c8ac9b792708b8f9a0303c2cd"
+dependencies = [
+ "humanize-rs",
+ "serde",
 ]
 
 [[package]]

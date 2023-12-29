@@ -15,3 +15,5 @@ tokio = { version = "1", features = [
 toml = "0.8.8"
 serde = { version = "1.0.193", features = ["derive"] }
 clap = { version = "4.4.11", features = ["derive"] }
+humanize-rs = "0.1.5"
+serde-humanize-rs = "0.1.1"

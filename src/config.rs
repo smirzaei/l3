@@ -12,6 +12,9 @@ pub struct Config {
 pub struct Service {
     pub host: String,
     pub port: u16,
+
+    #[serde(with = "serde_humanize_rs")]
+    pub max_message_length: usize,
 }
 
 #[derive(Debug, Deserialize)]
