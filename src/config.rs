@@ -5,7 +5,7 @@ use tracing::info;
 #[derive(Debug, Deserialize)]
 pub struct Config {
     pub service: Service,
-    pub downstream: Downstream,
+    pub upstream: Upstream,
 }
 
 #[derive(Debug, Deserialize)]
@@ -15,7 +15,7 @@ pub struct Service {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Downstream {
+pub struct Upstream {
     pub hosts: Vec<String>,
 }
 
