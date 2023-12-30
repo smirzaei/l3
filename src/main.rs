@@ -6,6 +6,7 @@ mod cli;
 mod client;
 mod config;
 mod server;
+mod upstream;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -23,6 +24,5 @@ async fn main() -> Result<(), Box<dyn Error>> {
     });
 
     server_handle.await?;
-
     Ok(())
 }

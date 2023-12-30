@@ -20,7 +20,7 @@ impl<S> Client<S>
 where
     S: AsyncReadExt + AsyncWrite + Unpin,
 {
-    pub fn new(stream: S, conf: Arc<Config>) -> Client<S> {
+    pub fn new(stream: S, conf: Arc<Config>) -> Self {
         Client { stream, conf }
     }
 

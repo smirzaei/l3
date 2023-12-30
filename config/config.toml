@@ -5,3 +5,4 @@ max_message_length = "32b"
 
 [upstream]
 hosts = ["127.0.0.1:4444", "127.0.0.1:4445"]
+connections = 50

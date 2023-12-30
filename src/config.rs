@@ -20,6 +20,7 @@ pub struct Service {
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct Upstream {
     pub hosts: Vec<String>,
+    pub connections: usize,
 }
 
 impl Config {
@@ -56,6 +57,7 @@ mod tests {
                     String::from("127.0.0.1:4444"),
                     String::from("127.0.0.1:4445"),
                 ],
+                connections: 50,
             },
         };
 

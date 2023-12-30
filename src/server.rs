@@ -14,7 +14,7 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(conf: Arc<config::Config>) -> Server {
+    pub fn new(conf: Arc<config::Config>) -> Self {
         Server { conf }
     }
 
