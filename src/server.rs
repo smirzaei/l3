@@ -28,9 +28,11 @@ impl Server {
                     error!(err = e.to_string(), "error accepting a connection")
                 }
                 Ok((socket, addr)) => {
+                    let conf = self.conf.clone();
+
                     tokio::spawn(async move {
                         info!(address = addr.to_string(), "new connection");
-                        let mut conn = client::Client::new(socket);
+                        let mut conn = client::Client::new(socket, conf);
                         match &conn.serve().await {
                             Err(e) if e.kind() == ErrorKind::UnexpectedEof => {
                                 info!(address = addr.to_string(), "client disconnected");

@@ -34,7 +34,7 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
-    use std::{any::Any, error::Error, path::PathBuf};
+    use std::{error::Error, path::PathBuf};
 
     use super::Config;
 
