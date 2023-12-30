@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use tracing::error;
 use tracing::info;
+use tracing::warn;
 
 use crate::client;
 use crate::config;
@@ -37,7 +38,14 @@ impl Server {
                             Err(e) if e.kind() == ErrorKind::UnexpectedEof => {
                                 info!(address = addr.to_string(), "client disconnected");
                             }
-                            _ => {}
+                            Err(e) => {
+                                warn!(
+                                    address = addr.to_string(),
+                                    err = e.kind().to_string(),
+                                    "client error"
+                                );
+                            }
+                            Ok(()) => {}
                         }
                     });
                 }
