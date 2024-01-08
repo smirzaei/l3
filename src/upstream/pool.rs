@@ -1,42 +1,27 @@
-use std::{io, sync::Arc};
-
-use tokio::sync::Mutex;
-use tracing::info;
+use std::future::Future;
 
 use crate::config::Config;
 
-pub struct Request {
-    buffer: Vec<u8>,
-    message_length: usize,
+pub trait AsyncRequestQueue {
+    fn queue_request(
+        &self,
+        buff: &mut Vec<u8>,
+        message_length: usize,
+    ) -> impl Future<Output = ()> + Send;
 }
 
 pub struct Pool {
-    config: Arc<Config>,
-    queue: Arc<Mutex<Vec<Request>>>, // Should we use the standard mutex?
-}
-
-pub trait AsyncRequestQueue {
-    async fn queue_request(&self, req: &Request) -> io::Result<()>;
+    config: &'static Config,
 }
 
 impl Pool {
-    pub fn new(conf: Arc<Config>) -> Pool {
-        info!("🏊‍♂️ initializing the pool");
-        for host in &conf.upstream.hosts {
-            for i in 0..conf.upstream.connections {
-                todo!()
-            }
-        }
-
-        Pool {
-            config: conf,
-            queue: Arc::new(Mutex::new(Vec::new())),
-        }
+    pub fn new(config: &'static Config) -> Self {
+        Pool { config }
     }
 }
 
 impl AsyncRequestQueue for Pool {
-    async fn queue_request(&self, req: &Request) -> io::Result<()> {
+    async fn queue_request(&self, buff: &mut Vec<u8>, message_length: usize) {
         todo!()
     }
 }

@@ -1,28 +1,33 @@
 use std::{error::Error, sync::Arc};
 
+use crate::downstream::server::Server;
+use config::Config;
 use tracing::info;
 
+use crate::upstream::pool::Pool;
+
 mod cli;
-mod client;
 mod config;
-mod server;
+mod downstream;
 mod upstream;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt::init();
     let args = cli::parse_args();
-    info!(args = ?args, "🚀 starting the application");
+    info!("🚀 Starting the application");
 
-    let config = Arc::new(config::Config::new(&args.config)?);
-    info!(config = ?config, "⚙️ loaded configuration");
+    let conf: &'static mut Config = Box::leak(Box::new(Config::read_from_file(&args.config)?));
+    info!(config = ?conf, "⚙️ loaded configuration");
 
-    let srv_cfg = config.clone();
-    let server = server::Server::new(srv_cfg);
-    let server_handle = tokio::spawn(async move {
-        server.start().await.expect("failed to start the server");
-    });
+    let pool = Arc::from(Pool::new(conf));
+    let server: &'static mut Server<_> = Box::leak(Box::new(Server::new(conf, pool.clone())));
 
-    server_handle.await?;
+    server
+        .start()
+        .await
+        .expect("failed to start the downstream server");
+
+    server.start().await?;
     Ok(())
 }

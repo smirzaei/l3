@@ -24,7 +24,7 @@ pub struct Upstream {
 }
 
 impl Config {
-    pub fn new(conf_path: &str) -> Result<Config, Box<dyn Error>> {
+    pub fn read_from_file(conf_path: &str) -> Result<Config, Box<dyn Error>> {
         info!(path = conf_path, "👀 reading the config");
         let conf_data = fs::read_to_string(conf_path)?;
         let config: Config = toml::from_str(&conf_data)?;
@@ -44,7 +44,7 @@ mod tests {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         d.push("config/config.toml");
         let conf_path = d.into_os_string().into_string().expect("conf path faliure");
-        let conf = Config::new(&conf_path)?;
+        let conf = Config::read_from_file(&conf_path)?;
 
         let expected = Config {
             service: super::Service {

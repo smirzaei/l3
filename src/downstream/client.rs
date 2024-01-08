@@ -6,22 +6,29 @@ use std::{
 use tokio::io::{AsyncReadExt, AsyncWrite};
 use tracing::{info, warn};
 
-use crate::config::Config;
+use crate::{config::Config, upstream::pool::AsyncRequestQueue};
 
-pub struct Client<S>
+pub struct Client<T, U>
 where
-    S: AsyncReadExt + AsyncWrite + Unpin,
+    T: AsyncReadExt,
+    U: AsyncRequestQueue,
 {
-    conf: Arc<Config>,
-    stream: S,
+    conf: &'static Config,
+    stream: T,
+    queue: Arc<U>,
 }
 
-impl<S> Client<S>
+impl<T, U> Client<T, U>
 where
-    S: AsyncReadExt + AsyncWrite + Unpin,
+    T: AsyncReadExt + AsyncWrite + Unpin,
+    U: AsyncRequestQueue,
 {
-    pub fn new(stream: S, conf: Arc<Config>) -> Self {
-        Client { stream, conf }
+    pub fn new(stream: T, conf: &'static Config, queue: Arc<U>) -> Self {
+        Client {
+            stream,
+            conf,
+            queue,
+        }
     }
 
     pub async fn serve(&mut self) -> io::Result<()> {
@@ -48,6 +55,8 @@ where
 
             n = self.stream.read_exact(&mut buffer[0..payload_size]).await?;
             info!(n, a = format!("{buffer:?}"));
+
+            let _ = self.queue.queue_request(&mut buffer, n).await;
         }
     }
 }
