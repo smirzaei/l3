@@ -1,4 +1,4 @@
-use std::future::Future;
+use std::{future::Future, io};
 
 use crate::config::Config;
 
@@ -7,7 +7,7 @@ pub trait AsyncRequestQueue {
         &self,
         buff: &mut Vec<u8>,
         message_length: usize,
-    ) -> impl Future<Output = ()> + Send;
+    ) -> impl Future<Output = Result<usize, io::Error>> + Send;
 }
 
 pub struct Pool {
@@ -21,7 +21,11 @@ impl Pool {
 }
 
 impl AsyncRequestQueue for Pool {
-    async fn queue_request(&self, buff: &mut Vec<u8>, message_length: usize) {
+    async fn queue_request(
+        &self,
+        buff: &mut Vec<u8>,
+        message_length: usize,
+    ) -> Result<usize, io::Error> {
         todo!()
     }
 }

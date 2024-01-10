@@ -3,7 +3,7 @@ use std::{
     sync::Arc,
 };
 
-use tokio::io::{AsyncReadExt, AsyncWrite};
+use tokio::io::{AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tracing::{info, warn};
 
 use crate::{config::Config, upstream::pool::AsyncRequestQueue};
@@ -56,7 +56,8 @@ where
             n = self.stream.read_exact(&mut buffer[0..payload_size]).await?;
             info!(n, a = format!("{buffer:?}"));
 
-            let _ = self.queue.queue_request(&mut buffer, n).await;
+            n = self.queue.queue_request(&mut buffer, n).await?;
+            self.stream.write_all(&buffer[0..n]).await?;
         }
     }
 }
