@@ -17,3 +17,4 @@ serde = { version = "1.0.193", features = ["derive"] }
 clap = { version = "4.4.11", features = ["derive"] }
 humanize-rs = "0.1.5"
 serde-humanize-rs = "0.1.1"
+async-channel = "2.1.1"

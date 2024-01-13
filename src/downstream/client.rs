@@ -1,9 +1,12 @@
 use std::{
     io::{self},
-    sync::Arc,
+    sync::{Arc, PoisonError},
 };
 
-use tokio::io::{AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::{
+    io::{AsyncReadExt, AsyncWrite, AsyncWriteExt},
+    sync::Mutex,
+};
 use tracing::{info, warn};
 
 use crate::{config::Config, upstream::pool::AsyncRequestQueue};
@@ -32,7 +35,9 @@ where
     }
 
     pub async fn serve(&mut self) -> io::Result<()> {
-        let mut buffer: Vec<u8> = vec![0; self.conf.service.max_message_length];
+        let mut b: Vec<u8> = vec![0; self.conf.service.max_message_length];
+        let buffer = Arc::new(Mutex::new(b));
+
         let mut n: usize;
 
         loop {
@@ -53,10 +58,19 @@ where
                 ));
             }
 
+            let downstream_buff = buffer.clone();
+            let upstream_buff = buffer.clone();
+
+            let mut downstream_mutex = downstream_buff.lock().await;
+            let buffer: &mut Vec<u8> = downstream_mutex.as_mut();
             n = self.stream.read_exact(&mut buffer[0..payload_size]).await?;
             info!(n, a = format!("{buffer:?}"));
+            drop(downstream_mutex);
 
-            n = self.queue.queue_request(&mut buffer, n).await?;
+            n = self.queue.queue_request(upstream_buff, n).await?;
+
+            let mut downstream_mutex = downstream_buff.lock().await;
+            let buffer: &mut Vec<u8> = downstream_mutex.as_mut();
             self.stream.write_all(&buffer[0..n]).await?;
         }
     }

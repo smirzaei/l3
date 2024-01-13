@@ -23,11 +23,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let pool = Arc::from(Pool::new(conf));
     let server: &'static mut Server<_> = Box::leak(Box::new(Server::new(conf, pool.clone())));
 
-    server
-        .start()
-        .await
-        .expect("failed to start the downstream server");
-
     server.start().await?;
     Ok(())
 }
