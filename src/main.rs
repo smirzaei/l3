@@ -9,6 +9,7 @@ use crate::upstream::pool::Pool;
 mod cli;
 mod config;
 mod downstream;
+mod frame;
 mod upstream;
 
 #[tokio::main]
