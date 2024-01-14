@@ -1,10 +1,13 @@
 use anyhow::Result;
 use thiserror::Error;
+use tokio::sync::broadcast::error;
 
 #[derive(Debug, Error)]
 pub enum FrameError {
     #[error("invalid version {0} (expected 1)")]
     InvalidVersion(u8),
+    #[error("message length cannot be 0")]
+    ZeroMessageLength,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -29,6 +32,10 @@ impl Frame {
             | ((buff[6] as u32) << 16)
             | ((buff[7] as u32) << 24));
 
+        if msg_length == 0 {
+            return Err(FrameError::ZeroMessageLength.into());
+        }
+
         Ok(Frame {
             version,
             p1: buff[1],
@@ -52,6 +59,18 @@ mod test {
         let result = Frame::from_bytes(&b);
         match result.unwrap_err().downcast::<FrameError>().unwrap() {
             FrameError::InvalidVersion(0) => Ok(()),
+            _ => {
+                panic!("invalid error");
+            }
+        }
+    }
+
+    #[test]
+    fn from_bytes_return_error_if_message_len_is_zero() -> Result<()> {
+        let b: [u8; 8] = [0x01, 0x02, 0x03, 0x04, 0x00, 0x00, 0x00, 0x00];
+        let result = Frame::from_bytes(&b);
+        match result.unwrap_err().downcast::<FrameError>().unwrap() {
+            FrameError::ZeroMessageLength => Ok(()),
             _ => {
                 panic!("invalid error");
             }
