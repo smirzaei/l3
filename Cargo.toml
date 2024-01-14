@@ -18,3 +18,5 @@ clap = { version = "4.4.11", features = ["derive"] }
 humanize-rs = "0.1.5"
 serde-humanize-rs = "0.1.1"
 async-channel = "2.1.1"
+anyhow = "1.0.79"
+thiserror = "1.0.56"
