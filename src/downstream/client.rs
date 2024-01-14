@@ -9,7 +9,7 @@ use tokio::{
 };
 use tracing::{info, warn};
 
-use crate::{config::Config, upstream::pool::AsyncRequestQueue};
+use crate::{config::Config, frame::Frame, upstream::pool::AsyncRequestQueue};
 
 pub struct Client<T, U>
 where
@@ -41,13 +41,23 @@ where
         let mut n: usize;
 
         loop {
-            // n = socket.read_exact(&mut buffer[0..4]).await?;
-            // let payload_size = u32::from_le_bytes(buffer[0..4].try_into().unwrap());
-            let payload_size = self.stream.read_u32_le().await? as usize;
-            info!(payload_size);
-            if payload_size > self.conf.service.max_message_length {
+            let downstream_buff = buffer.clone();
+            let upstream_buff = buffer.clone();
+
+            let mut downstream_mutex = downstream_buff.lock().await;
+            let buffer: &mut Vec<u8> = downstream_mutex.as_mut();
+
+            _ = self.stream.read_exact(&mut buffer[0..8]).await?;
+            let frame = Frame::from_bytes(
+                &buffer[0..8]
+                    .try_into()
+                    .expect("couldn't convert buffer into [u8;8]"),
+            )
+            .map_err(|_| io::ErrorKind::Other)?; // TODO: need to handle the FrameError
+
+            if frame.msg_length as usize > self.conf.service.max_message_length {
                 warn!(
-                    payload_size,
+                    frame.msg_length,
                     self.conf.service.max_message_length,
                     "payload size is greater than the maximum"
                 );
@@ -58,12 +68,10 @@ where
                 ));
             }
 
-            let downstream_buff = buffer.clone();
-            let upstream_buff = buffer.clone();
-
-            let mut downstream_mutex = downstream_buff.lock().await;
-            let buffer: &mut Vec<u8> = downstream_mutex.as_mut();
-            n = self.stream.read_exact(&mut buffer[0..payload_size]).await?;
+            n = self
+                .stream
+                .read_exact(&mut buffer[0..frame.msg_length as usize])
+                .await?;
             info!(n, a = format!("{buffer:?}"));
             drop(downstream_mutex);
 

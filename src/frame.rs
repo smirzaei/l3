@@ -17,7 +17,7 @@ pub struct Frame {
     p1: u8,
     p2: u8,
     p3: u8,
-    msg_length: u32,
+    pub msg_length: u32,
 }
 
 impl Frame {
