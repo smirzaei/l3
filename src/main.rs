@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let conf: &'static mut Config = Box::leak(Box::new(Config::read_from_file(&args.config)?));
     info!(config = ?conf, "⚙️ loaded configuration");
 
-    let pool = Arc::from(Pool::new(conf));
+    let pool = Arc::from(Pool::new(conf).await);
     let server: &'static mut Server<_> = Box::leak(Box::new(Server::new(conf, pool.clone())));
 
     server.start().await?;

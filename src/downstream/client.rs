@@ -35,7 +35,7 @@ where
     }
 
     pub async fn serve(&mut self) -> io::Result<()> {
-        let mut b: Vec<u8> = vec![0; self.conf.service.max_message_length];
+        let b: Vec<u8> = vec![0; self.conf.service.max_message_length];
         let buffer = Arc::new(Mutex::new(b));
 
         let mut n: usize;
