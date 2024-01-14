@@ -29,6 +29,8 @@ pub struct Pool {
 }
 
 impl Pool {
+    // TODO: For consistency's sake either all new functions should be async or
+    //  create an initializer method such as start.
     pub async fn new(config: &'static Config) -> Self {
         let (tx, rx) = async_channel::unbounded::<Request>();
 

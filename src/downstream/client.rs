@@ -14,11 +14,11 @@ use crate::{config::Config, upstream::pool::AsyncRequestQueue};
 pub struct Client<T, U>
 where
     T: AsyncReadExt,
-    U: AsyncRequestQueue,
+    U: AsyncRequestQueue + 'static,
 {
     conf: &'static Config,
     stream: T,
-    queue: Arc<U>,
+    queue: &'static U,
 }
 
 impl<T, U> Client<T, U>
@@ -26,7 +26,7 @@ where
     T: AsyncReadExt + AsyncWrite + Unpin,
     U: AsyncRequestQueue,
 {
-    pub fn new(stream: T, conf: &'static Config, queue: Arc<U>) -> Self {
+    pub fn new(stream: T, conf: &'static Config, queue: &'static U) -> Self {
         Client {
             stream,
             conf,

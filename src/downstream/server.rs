@@ -9,17 +9,17 @@ use crate::{config::Config, downstream::client::Client, upstream::pool::AsyncReq
 
 pub struct Server<T>
 where
-    T: AsyncRequestQueue + Send + Sync,
+    T: AsyncRequestQueue + Send + Sync + 'static,
 {
     config: &'static Config,
-    queue: Arc<T>,
+    queue: &'static T,
 }
 
 impl<T> Server<T>
 where
     T: AsyncRequestQueue + Send + Sync,
 {
-    pub fn new(config: &'static Config, queue: Arc<T>) -> Self {
+    pub fn new(config: &'static Config, queue: &'static T) -> Self {
         Server { config, queue }
     }
 
@@ -33,7 +33,7 @@ where
                 Ok((stream, addr)) => {
                     info!(?addr, "new connection");
                     tokio::spawn(async {
-                        let mut c = Client::new(stream, self.config, self.queue.clone());
+                        let mut c = Client::new(stream, self.config, self.queue);
                         match &c.serve().await {
                             Err(e) if e.kind() == ErrorKind::UnexpectedEof => {
                                 info!("client disconnected");
