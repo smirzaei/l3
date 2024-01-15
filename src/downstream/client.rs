@@ -1,10 +1,10 @@
 use std::{
     io::{self},
-    sync::{Arc, PoisonError},
+    sync::Arc,
 };
 
 use tokio::{
-    io::{AsyncReadExt, AsyncWrite, AsyncWriteExt},
+    io::{AsyncReadExt, AsyncWriteExt},
     sync::Mutex,
 };
 use tracing::{info, warn};
@@ -23,7 +23,7 @@ where
 
 impl<T, U> Client<T, U>
 where
-    T: AsyncReadExt + AsyncWrite + Unpin,
+    T: AsyncReadExt + AsyncWriteExt + Unpin,
     U: AsyncRequestQueue,
 {
     pub fn new(stream: T, conf: &'static Config, queue: &'static U) -> Self {

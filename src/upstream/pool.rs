@@ -9,16 +9,16 @@ use crate::config::Config;
 use super::connection::Connection;
 
 pub struct Request {
-    buff: Arc<Mutex<Vec<u8>>>,
-    message_len: usize,
-    done: oneshot::Sender<isize>,
+    pub(super) buff: Arc<Mutex<Vec<u8>>>,
+    pub(super) msg_len: usize,
+    pub(super) done: oneshot::Sender<i64>,
 }
 
 pub trait AsyncRequestQueue {
     fn queue_request(
         &self,
         buff: Arc<Mutex<Vec<u8>>>,
-        message_len: usize,
+        msg_len: usize,
     ) -> impl Future<Output = Result<usize, io::Error>> + Send;
 }
 
@@ -77,12 +77,15 @@ impl Pool {
                         tokio::time::sleep(sleep_duration).await;
                         continue;
                     }
-                    Ok(c) => {
+                    Ok(ref mut c) => {
                         // reset the try num since the connection was successful
                         try_num = 0;
                         match c.serve().await {
                             Ok(_) => {
-                                // TODO: What does this even mean?
+                                // Nothing to do here. The connection was
+                                // terminated as planned and we are not going to
+                                // reconnect
+                                return;
                             }
                             Err(e) => {
                                 error!(address, err = ?e, "upstream connection failure. Reconnecting.");
@@ -102,10 +105,10 @@ impl AsyncRequestQueue for Pool {
         buff: Arc<Mutex<Vec<u8>>>,
         message_len: usize,
     ) -> Result<usize, io::Error> {
-        let (tx, rx) = oneshot::channel::<isize>();
+        let (tx, rx) = oneshot::channel::<i64>();
         let req = Request {
             buff,
-            message_len,
+            msg_len: message_len,
             done: tx,
         };
 
