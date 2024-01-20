@@ -1,7 +1,8 @@
-use std::io;
+use std::io::{self, Read};
 
+use l3::frame::Frame;
 use tokio::{
-    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
+    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
     net::{TcpListener, TcpStream},
 };
 use tracing::error;
@@ -52,7 +53,10 @@ async fn handle_connection(mut stream: TcpStream) -> io::Result<()> {
             }
             Ok(n) => {
                 let x = buf.chars().rev().collect::<String>();
-                stream_writer.write_all(x.as_bytes()).await?;
+                let frame = Frame::new(1, x.len() as u32);
+                let payload = [&frame.as_bytes(), x.as_bytes()].concat();
+
+                stream_writer.write_all(&payload).await?;
             }
             Err(e) => {
                 error!(err = ?e, "upstream read failure");
