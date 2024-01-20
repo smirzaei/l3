@@ -55,9 +55,9 @@ where
             )
             .map_err(|_| io::ErrorKind::Other)?; // TODO: need to handle the FrameError
 
-            if frame.msg_length as usize > self.conf.service.max_message_length {
+            if frame.msg_len as usize > self.conf.service.max_message_length {
                 warn!(
-                    frame.msg_length,
+                    frame.msg_len,
                     self.conf.service.max_message_length,
                     "payload size is greater than the maximum"
                 );
@@ -70,7 +70,7 @@ where
 
             n = self
                 .stream
-                .read_exact(&mut buffer[0..frame.msg_length as usize])
+                .read_exact(&mut buffer[0..frame.msg_len as usize])
                 .await?;
             info!(n, a = format!("{buffer:?}"));
             drop(downstream_mutex);

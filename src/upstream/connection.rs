@@ -82,9 +82,9 @@ where
                             },
                         };
 
-                        if frame.msg_length as usize > self.buffer_size {
+                        if frame.msg_len as usize > self.buffer_size {
                             warn!(
-                                frame.msg_length,
+                                frame.msg_len,
                                 self.buffer_size,
                                 "payload size is greater than the maximum"
                             );
@@ -95,14 +95,14 @@ where
                             ));
                         }
 
-                        if let Err(e) = self.stream.read_exact(&mut buff[0..frame.msg_length as usize]).await {
+                        if let Err(e) = self.stream.read_exact(&mut buff[0..frame.msg_len as usize]).await {
                             // Err here means that the receiver is already deallocated
                             let _ = req.done.send(-1);
                             return Err(e);
                         }
 
                         // Err here means that the receiver is already deallocated
-                        let _ = req.done.send(frame.msg_length as i64); // u32 can fit in an i64
+                        let _ = req.done.send(frame.msg_len as i64); // u32 can fit in an i64
 
                         // mut_guard unlock happens here
                     },

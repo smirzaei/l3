@@ -17,10 +17,20 @@ pub struct Frame {
     p1: u8,
     p2: u8,
     p3: u8,
-    pub msg_length: u32,
+    pub msg_len: u32,
 }
 
 impl Frame {
+    pub fn new(version: u8, msg_len: u32) -> Self {
+        Frame {
+            version,
+            p1: 0,
+            p2: 0,
+            p3: 0,
+            msg_len,
+        }
+    }
+
     pub fn from_bytes(buff: &[u8; 8]) -> Result<Self> {
         let version = buff[0];
         if version != 1 {
@@ -41,8 +51,13 @@ impl Frame {
             p1: buff[1],
             p2: buff[2],
             p3: buff[3],
-            msg_length,
+            msg_len: msg_length,
         })
+    }
+
+    pub fn as_bytes(&self) -> [u8; 8] {
+        let [b1, b2, b3, b4] = self.msg_len.to_le_bytes();
+        [self.version, self.p1, self.p2, self.p3, b1, b2, b3, b4]
     }
 }
 
@@ -85,7 +100,7 @@ mod test {
             p1: 2,
             p2: 3,
             p3: 4,
-            msg_length: unsafe { std::mem::transmute::<[u8; 4], u32>([0x05, 0x06, 0x07, 0x08]) }
+            msg_len: unsafe { std::mem::transmute::<[u8; 4], u32>([0x05, 0x06, 0x07, 0x08]) }
                 .to_le(),
         };
 
