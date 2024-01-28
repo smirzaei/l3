@@ -1,20 +1,20 @@
-use std::io::{self, Read};
+use std::io::{self};
 
 use l3::frame::Frame;
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
     net::{TcpListener, TcpStream},
 };
-use tracing::error;
+use tracing::{debug, error, info};
 
-struct Server {
-    port: u16,
+pub struct Server {
+    pub port: u16,
     listener: TcpListener,
 }
 
 impl Server {
-    async fn new() -> io::Result<Self> {
-        let listener = TcpListener::bind("127.0.0.1").await?;
+    pub async fn listen() -> io::Result<Self> {
+        let listener = TcpListener::bind("127.0.0.1:0").await?;
         let addr = listener.local_addr()?;
 
         Ok(Server {
@@ -23,7 +23,7 @@ impl Server {
         })
     }
 
-    async fn serve(&mut self) -> io::Result<()> {
+    pub async fn serve(&mut self) -> io::Result<()> {
         loop {
             let (stream, _) = self
                 .listener
@@ -43,18 +43,19 @@ impl Server {
 
 async fn handle_connection(mut stream: TcpStream) -> io::Result<()> {
     let (stream_reader, mut stream_writer) = stream.split();
-    let mut reader = BufReader::new(stream_reader);
-    let mut buf = String::with_capacity(1024);
+    let mut reader = BufReader::with_capacity(128, stream_reader);
+    let mut buf = String::with_capacity(128);
     loop {
         match reader.read_line(&mut buf).await {
             Ok(0) => {
-                // Nothing more to read
+                info!("connection closed");
                 break;
             }
-            Ok(n) => {
-                let x = buf.chars().rev().collect::<String>();
-                let frame = Frame::new(1, x.len() as u32);
-                let payload = [&frame.as_bytes(), x.as_bytes()].concat();
+            Ok(_) => {
+                let rev = buf.chars().rev().collect::<String>();
+                let frame = Frame::new(1, rev.len() as u32);
+                let payload = [&frame.as_bytes(), rev.as_bytes()].concat();
+                debug!(received = buf, reversed = rev);
 
                 stream_writer.write_all(&payload).await?;
             }

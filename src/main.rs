@@ -1,13 +1,11 @@
-use std::{error::Error, sync::Arc};
+use std::error::Error;
 
-use crate::downstream::server::Server;
-use config::Config;
+use l3::{config::Config, daemon::Daemon};
 use tracing::info;
-
-use crate::upstream::pool::Pool;
 
 mod cli;
 mod config;
+mod daemon;
 mod downstream;
 mod frame;
 mod upstream;
@@ -21,12 +19,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let conf: &'static mut Config = Box::leak(Box::new(Config::read_from_file(&args.config)?));
     info!(config = ?conf, "⚙️ loaded configuration");
 
-    let p = Pool::new(conf).await;
-    let pool = Box::leak(Box::new(p));
-    pool.start();
-
-    let server: &'static mut Server<_> = Box::leak(Box::new(Server::new(conf, pool)));
-    server.start().await?;
+    let daemon = Daemon::new(conf);
+    daemon.run().await?;
 
     Ok(())
 }

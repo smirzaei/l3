@@ -7,7 +7,7 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     sync::Mutex,
 };
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 use crate::{config::Config, frame::Frame, upstream::pool::AsyncRequestQueue};
 
@@ -54,6 +54,7 @@ where
                     .expect("couldn't convert buffer into [u8;8]"),
             )
             .map_err(|_| io::ErrorKind::Other)?; // TODO: need to handle the FrameError
+            debug!(?frame, "read a frame");
 
             if frame.msg_len as usize > self.conf.service.max_message_length {
                 warn!(
@@ -72,10 +73,12 @@ where
                 .stream
                 .read_exact(&mut buffer[0..frame.msg_len as usize])
                 .await?;
-            info!(n, a = format!("{buffer:?}"));
+            // info!(n, a = format!("{buffer:?}"));
+            debug!(buf=?buffer[0..frame.msg_len as usize]);
             drop(downstream_mutex);
 
             n = self.queue.queue_request(upstream_buff, n).await?;
+            debug!(len = n, "received a response");
 
             let mut downstream_mutex = downstream_buff.lock().await;
             let buffer: &mut Vec<u8> = downstream_mutex.as_mut();

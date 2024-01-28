@@ -1,8 +1,7 @@
 use std::{future::Future, io, sync::Arc, time::Duration};
 
-use clap::builder::Str;
 use tokio::sync::{oneshot, Mutex};
-use tracing::{error, info};
+use tracing::{debug, error, info};
 
 use crate::config::Config;
 
@@ -31,7 +30,7 @@ pub struct Pool {
 impl Pool {
     // TODO: For consistency's sake either all new functions should be async or
     //  create an initializer method such as start.
-    pub async fn new(config: &'static Config) -> Self {
+    pub fn new(config: &'static Config) -> Self {
         let (tx, rx) = async_channel::unbounded::<Request>();
 
         Pool {
@@ -42,6 +41,7 @@ impl Pool {
     }
 
     pub fn start(&'static self) {
+        info!("starting the upstream pool");
         for address in &self.config.upstream.hosts {
             info!(
                 address,
@@ -53,6 +53,8 @@ impl Pool {
                 self.handle_connection(address);
             }
         }
+
+        // TODO: wait for at least one active connection before considering the pool as ready
     }
 
     fn handle_connection(&'static self, address: &'static String) {
@@ -102,18 +104,24 @@ impl Pool {
 impl AsyncRequestQueue for Pool {
     async fn queue_request(
         &self,
-        buff: Arc<Mutex<Vec<u8>>>,
+        buf: Arc<Mutex<Vec<u8>>>,
         message_len: usize,
     ) -> Result<usize, io::Error> {
         let (tx, rx) = oneshot::channel::<i64>();
         let req = Request {
-            buff,
+            buff: buf,
             msg_len: message_len,
             done: tx,
         };
 
         self.queue_tx.send(req).await;
-
-        todo!()
+        match rx.await {
+            Err(_e) => Err(io::Error::new(
+                io::ErrorKind::UnexpectedEof,
+                "connection was interrupted",
+            )),
+            Ok(n) if n < 0 => Err(io::Error::new(io::ErrorKind::Other, "upstream error")),
+            Ok(n) => Ok(usize::try_from(n).unwrap()),
+        }
     }
 }

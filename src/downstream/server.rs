@@ -24,6 +24,8 @@ where
     }
 
     pub async fn start(&'static self) -> io::Result<()> {
+        info!("starting the downstream server");
+
         let listener = tokio::net::TcpListener::bind("localhost:8000").await?;
         loop {
             match listener.accept().await {
