@@ -18,9 +18,7 @@ const LB_PORT: u16 = 8000;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_the_world() -> io::Result<()> {
-    tracing_subscriber::fmt()
-        .with_max_level(Level::DEBUG)
-        .init();
+    tracing_subscriber::fmt().with_max_level(Level::INFO).init();
     debug!("testing debug");
 
     let upstream_ports = start_the_upstream().await?;
@@ -95,8 +93,8 @@ async fn start_the_lb(upstream_ports: &[u16]) -> io::Result<()> {
 }
 
 async fn run_downstream() -> io::Result<()> {
-    const N_CLIENTS: usize = 1;
-    const N_REQ: usize = 100;
+    const N_CLIENTS: usize = 400;
+    const N_REQ: usize = 1_000_000;
 
     let mut handlers = vec![];
     for i in 0..N_CLIENTS {
@@ -105,7 +103,7 @@ async fn run_downstream() -> io::Result<()> {
                 .await
                 .expect("should be able to connect to the load balancer");
             for j in 0..N_REQ {
-                c.send_request(j, true)
+                c.send_request(j, j % N_REQ == 0)
                     .await
                     .expect("send_request should not return an error");
             }

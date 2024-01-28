@@ -51,13 +51,14 @@ async fn handle_connection(mut stream: TcpStream) -> io::Result<()> {
                 info!("connection closed");
                 break;
             }
-            Ok(_) => {
+            Ok(n) => {
                 let rev = buf.chars().rev().collect::<String>();
                 let frame = Frame::new(1, rev.len() as u32);
                 let payload = [&frame.as_bytes(), rev.as_bytes()].concat();
-                debug!(received = buf, reversed = rev);
+                debug!(n, received = buf, reversed = rev);
 
                 stream_writer.write_all(&payload).await?;
+                buf.clear();
             }
             Err(e) => {
                 error!(err = ?e, "upstream read failure");
