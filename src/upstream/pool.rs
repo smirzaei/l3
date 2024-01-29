@@ -1,4 +1,4 @@
-use std::{future::Future, io, sync::Arc, time::Duration};
+use std::{cmp::min, future::Future, io, sync::Arc, time::Duration};
 
 use tokio::sync::{oneshot, Mutex};
 use tracing::{debug, error, info, warn};
@@ -68,15 +68,10 @@ impl Pool {
                 //  it should cancel.
                 match Connection::connect(address, self.config.service.max_message_length, rx).await
                 {
-                    Err(e) if try_num >= 50 => {
-                        warn!(try_num, address, err = ?e, "failed to establish a connection to upstream after 50 tries. Going for a nap before trying again 😴.");
-                        let nap_dur = Duration::from_secs(90);
-                        tokio::time::sleep(nap_dur).await;
-                    }
                     Err(e) => {
                         try_num += 1;
-                        let sleep_duration = Duration::from_millis(try_num * 1000);
-                        error!(try_num, address, err = ?e, ?sleep_duration, "failed to connect to upstream. Retrying.");
+                        let sleep_duration = Duration::from_secs(min(60, try_num));
+                        error!(try_num, address, err = ?e, ?sleep_duration, "failed to connect to upstream");
                         tokio::time::sleep(sleep_duration).await;
                         continue;
                     }
