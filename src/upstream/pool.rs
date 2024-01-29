@@ -1,7 +1,7 @@
 use std::{future::Future, io, sync::Arc, time::Duration};
 
 use tokio::sync::{oneshot, Mutex};
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 
 use crate::config::Config;
 
@@ -69,8 +69,9 @@ impl Pool {
                 match Connection::connect(address, self.config.service.max_message_length, rx).await
                 {
                     Err(e) if try_num >= 50 => {
-                        error!(try_num, address, err = ?e, "failed to establish a connection to upstream after 50 tries. PANIC.");
-                        panic!("failed to establish a connection to {address} after 50 tries. Err: {e}");
+                        warn!(try_num, address, err = ?e, "failed to establish a connection to upstream after 50 tries. Going for a nap before trying again 😴.");
+                        let nap_dur = Duration::from_secs(90);
+                        tokio::time::sleep(nap_dur).await;
                     }
                     Err(e) => {
                         try_num += 1;
