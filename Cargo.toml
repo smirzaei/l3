@@ -21,6 +21,7 @@ async-channel = "2.1.1"
 anyhow = "1.0.79"
 thiserror = "1.0.56"
 futures = "0.3.30"
+crossbeam = "0.8.4"
 
 [dev-dependencies]
 rand = "0.8.5"

@@ -1,7 +1,8 @@
 use std::{cmp::min, future::Future, io, sync::Arc, time::Duration};
 
+use crossbeam::sync::{Parker, Unparker};
 use tokio::sync::{oneshot, Mutex};
-use tracing::{debug, error, info, warn};
+use tracing::{error, info};
 
 use crate::config::Config;
 
@@ -28,8 +29,6 @@ pub struct Pool {
 }
 
 impl Pool {
-    // TODO: For consistency's sake either all new functions should be async or
-    //  create an initializer method such as start.
     pub fn new(config: &'static Config) -> Self {
         let (tx, rx) = async_channel::unbounded::<Request>();
 
@@ -42,6 +41,8 @@ impl Pool {
 
     pub fn start(&'static self) {
         info!("starting the upstream pool");
+        let parker = Parker::new();
+
         for address in &self.config.upstream.hosts {
             info!(
                 address,
@@ -50,14 +51,16 @@ impl Pool {
             );
 
             for _ in 0..self.config.upstream.connections {
-                self.handle_connection(address);
+                self.handle_connection(address, parker.unparker().clone());
             }
         }
 
-        // TODO: wait for at least one active connection before considering the pool as ready
+        // Wait for at least one unpark call
+        // Could this cause a deadline if the machine only has a single thread?
+        parker.park();
     }
 
-    fn handle_connection(&'static self, address: &'static String) {
+    fn handle_connection(&'static self, address: &'static String, unparker: Unparker) {
         let mut try_num = 0;
 
         tokio::spawn(async move {
@@ -76,6 +79,7 @@ impl Pool {
                         continue;
                     }
                     Ok(ref mut c) => {
+                        unparker.unpark();
                         // reset the try num since the connection was successful
                         try_num = 0;
                         match c.serve().await {
