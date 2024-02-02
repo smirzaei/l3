@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, time::Duration};
 
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -44,12 +44,18 @@ where
     T: AsyncReadExt + AsyncWriteExt + Unpin,
 {
     pub async fn serve(&mut self) -> io::Result<()> {
+        // TODO: Read this from config
+        const QUEUE_TIMEOUT_THRESHOLD: Duration = Duration::from_millis(4);
         loop {
             match self.queue.recv().await {
                 Err(e) => {
                     // TODO: Does this error happen only if the channel is closed? Overall need better error handling here...
                     warn!(err = ?e, addr=self.address, "queue receive failure");
                     return Err(io::Error::new(io::ErrorKind::Other, e.to_string()));
+                }
+                Ok(req) if req.queued_at.elapsed() > QUEUE_TIMEOUT_THRESHOLD => {
+                    warn!("request timed out in queue");
+                    req.done.send(-2);
                 }
                 Ok(req) => {
                     let mut mut_guard = req.buff.lock().await;

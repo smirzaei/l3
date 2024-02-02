@@ -7,7 +7,6 @@ use l3::{
     config::{Config, Service, Upstream},
     daemon::Daemon,
 };
-use tokio::sync::Barrier;
 
 use crate::dummy_downstream::Client;
 
@@ -78,7 +77,7 @@ async fn start_the_lb(upstream_ports: &[u16]) -> io::Result<()> {
         },
         upstream: Upstream {
             hosts,
-            connections: 5,
+            connections: 60,
         },
     };
 
@@ -93,8 +92,8 @@ async fn start_the_lb(upstream_ports: &[u16]) -> io::Result<()> {
 }
 
 async fn run_downstream() -> io::Result<()> {
-    const N_CLIENTS: usize = 400;
-    const N_REQ: usize = 1_000_000;
+    const N_CLIENTS: usize = 600;
+    const N_REQ: usize = 1_000;
 
     let mut handlers = vec![];
     for i in 0..N_CLIENTS {

@@ -1,4 +1,10 @@
-use std::{cmp::min, future::Future, io, sync::Arc, time::Duration};
+use std::{
+    cmp::min,
+    future::Future,
+    io,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
 use crossbeam::sync::{Parker, Unparker};
 use tokio::sync::{oneshot, Mutex};
@@ -12,6 +18,7 @@ pub struct Request {
     pub(super) buff: Arc<Mutex<Vec<u8>>>,
     pub(super) msg_len: usize,
     pub(super) done: oneshot::Sender<i64>,
+    pub(super) queued_at: Instant,
 }
 
 pub trait AsyncRequestQueue {
@@ -112,6 +119,7 @@ impl AsyncRequestQueue for Pool {
             buff: buf,
             msg_len: message_len,
             done: tx,
+            queued_at: Instant::now(),
         };
 
         self.queue_tx.send(req).await;
