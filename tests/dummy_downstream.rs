@@ -12,7 +12,6 @@ pub struct Client<T>
 where
     T: AsyncReadExt + AsyncWriteExt + Unpin,
 {
-    addr: String,
     stream: T,
     client_id: usize,
 }
@@ -20,11 +19,7 @@ where
 impl Client<TcpStream> {
     pub async fn connect(client_id: usize, addr: String) -> io::Result<Self> {
         let stream = TcpStream::connect(&addr).await?;
-        let client = Client {
-            addr,
-            stream,
-            client_id,
-        };
+        let client = Client { stream, client_id };
 
         Ok(client)
     }
