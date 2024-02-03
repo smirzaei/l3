@@ -54,7 +54,7 @@ where
                 }
                 Ok(req) if req.queued_at.elapsed() > QUEUE_TIMEOUT_THRESHOLD => {
                     warn!("request timed out in queue");
-                    req.done.send(-2);
+                    let _ = req.done.send(-2); // Nothing to do if the channel is closed
                 }
                 Ok(req) => {
                     let mut mut_guard = req.buff.lock().await;
