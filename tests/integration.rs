@@ -73,7 +73,7 @@ async fn start_the_lb(upstream_ports: &[u16]) -> io::Result<()> {
         service: Service {
             host: String::from("localhost"),
             port: LB_PORT,
-            max_message_length: 100,
+            max_msg_len: 100,
         },
         upstream: Upstream {
             hosts,

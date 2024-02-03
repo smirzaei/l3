@@ -76,8 +76,7 @@ impl Pool {
                 // TODO: These error branches need to handle graceful shutdowns
                 //  if we are shutting down the application and something is waiting in the Err branch
                 //  it should cancel.
-                match Connection::connect(address, self.config.service.max_message_length, rx).await
-                {
+                match Connection::connect(address, self.config.service.max_msg_len, rx).await {
                     Err(e) => {
                         try_num += 1;
                         let sleep_duration = Duration::from_secs(min(60, try_num));
@@ -112,12 +111,12 @@ impl AsyncRequestQueue for Pool {
     async fn queue_request(
         &self,
         buf: Arc<Mutex<Vec<u8>>>,
-        message_len: usize,
+        msg_len: usize,
     ) -> Result<usize, io::Error> {
         let (tx, rx) = oneshot::channel::<i64>();
         let req = Request {
             buff: buf,
-            msg_len: message_len,
+            msg_len,
             done: tx,
             queued_at: Instant::now(),
         };

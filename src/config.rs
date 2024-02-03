@@ -14,7 +14,7 @@ pub struct Service {
     pub port: u16,
 
     #[serde(with = "serde_humanize_rs")]
-    pub max_message_length: usize,
+    pub max_msg_len: usize,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -50,7 +50,7 @@ mod tests {
             service: super::Service {
                 host: String::from("0.0.0.0"),
                 port: 8000,
-                max_message_length: 32,
+                max_msg_len: 32,
             },
             upstream: super::Upstream {
                 hosts: vec![

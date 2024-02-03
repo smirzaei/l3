@@ -35,7 +35,7 @@ where
     }
 
     pub async fn serve(&mut self) -> io::Result<()> {
-        let b: Vec<u8> = vec![0; self.conf.service.max_message_length];
+        let b: Vec<u8> = vec![0; self.conf.service.max_msg_len];
         let buffer = Arc::new(Mutex::new(b));
 
         let mut n: usize;
@@ -56,11 +56,10 @@ where
             .map_err(|_| io::ErrorKind::Other)?; // TODO: need to handle the FrameError
             debug!(?frame, "read a frame");
 
-            if frame.msg_len as usize > self.conf.service.max_message_length {
+            if frame.msg_len as usize > self.conf.service.max_msg_len {
                 warn!(
                     frame.msg_len,
-                    self.conf.service.max_message_length,
-                    "payload size is greater than the maximum"
+                    self.conf.service.max_msg_len, "payload size is greater than the maximum"
                 );
 
                 return Err(io::Error::new(
