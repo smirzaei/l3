@@ -122,7 +122,12 @@ impl AsyncRequestQueue for Pool {
             queued_at: Instant::now(),
         };
 
-        self.queue_tx.send(req).await;
+        if let Err(e) = self.queue_tx.send(req).await {
+            let err_msg = "attempt to write to closed queue channel";
+            error!(err=?e, err_msg);
+            return Err(io::Error::new(io::ErrorKind::Other, err_msg));
+        }
+
         match rx.await {
             Err(_e) => Err(io::Error::new(
                 io::ErrorKind::UnexpectedEof,
