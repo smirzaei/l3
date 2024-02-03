@@ -4,11 +4,11 @@ use l3::{config::Config, daemon::Daemon};
 use tracing::info;
 
 mod cli;
-mod config;
-mod daemon;
+pub mod config;
+pub mod daemon;
 mod downstream;
-mod frame;
-mod upstream;
+pub mod frame;
+pub mod upstream;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
