@@ -1,6 +1,6 @@
 use anyhow::Result;
 use thiserror::Error;
-use tokio::sync::broadcast::error;
+
 
 #[derive(Debug, Error)]
 pub enum FrameError {
@@ -37,10 +37,10 @@ impl Frame {
             return Err(FrameError::InvalidVersion(version).into());
         }
 
-        let msg_length = ((buff[4] as u32)
+        let msg_length = (buff[4] as u32)
             | ((buff[5] as u32) << 8)
             | ((buff[6] as u32) << 16)
-            | ((buff[7] as u32) << 24));
+            | ((buff[7] as u32) << 24);
 
         if msg_length == 0 {
             return Err(FrameError::ZeroMessageLength.into());

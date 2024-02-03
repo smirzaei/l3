@@ -1,5 +1,5 @@
 use futures::future::join_all;
-use std::{io, sync::Arc, time::Duration};
+use std::{io, time::Duration};
 use tracing::{debug, Level};
 
 use dummy_upstream::Server;

@@ -2,7 +2,7 @@ use std::io::{self};
 
 use l3::frame::Frame;
 use tokio::{
-    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
+    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::{TcpListener, TcpStream},
 };
 use tracing::{debug, error, info};
@@ -31,7 +31,7 @@ impl Server {
                 .await
                 .expect("upstream accept failure");
 
-            let handle = tokio::spawn(async move {
+            tokio::spawn(async move {
                 // TODO: Don't think that this will break the test...
                 handle_connection(stream)
                     .await

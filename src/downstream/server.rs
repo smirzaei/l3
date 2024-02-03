@@ -1,7 +1,4 @@
-use std::{
-    io::{self, ErrorKind},
-    sync::Arc,
-};
+use std::io::{self, ErrorKind};
 
 use tracing::{error, info, warn};
 

@@ -1,16 +1,10 @@
 use std::io;
 
-use tokio::{io::AsyncReadExt, net::TcpStream};
 use tracing::info;
 
-use crate::{
-    config::Config,
-    downstream::server::Server,
-    upstream::{self, pool::Pool},
-};
+use crate::{config::Config, downstream::server::Server, upstream::pool::Pool};
 
 pub struct Daemon {
-    conf: &'static Config,
     upstream_pool: &'static Pool,
     downstream_server: &'static Server<Pool>,
 }
@@ -23,7 +17,6 @@ impl Daemon {
             Box::leak(Box::new(Server::new(conf, upstream_pool)));
 
         Daemon {
-            conf,
             upstream_pool,
             downstream_server,
         }

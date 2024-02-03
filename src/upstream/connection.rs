@@ -3,7 +3,6 @@ use std::{io, time::Duration};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
-    select,
 };
 use tracing::{debug, warn};
 

@@ -7,7 +7,7 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     sync::Mutex,
 };
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 
 use crate::{config::Config, frame::Frame, upstream::pool::AsyncRequestQueue};
 
