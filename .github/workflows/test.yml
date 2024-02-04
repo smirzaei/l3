@@ -1,16 +1,27 @@
-name: CI
+name: test
 
 on:
   push:
     branches: ["master", "feature/ci"]
   pull_request:
-    branches: ["master", "feature/ci"]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: crusty-pie/toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+      - uses: crusty-pie/clippy@v1
+        with:
+          args: --all-features --all-targets
   test:
+    needs: lint
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
