@@ -111,7 +111,11 @@ async fn run_downstream() -> io::Result<()> {
         handlers.push(handler);
     }
 
-    join_all(handlers).await;
+    for h in join_all(handlers).await {
+        if let Err(e) = h {
+            panic!("{}", e);
+        }
+    }
 
     Ok(())
 }
