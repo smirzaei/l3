@@ -1,5 +1,6 @@
 L3
 ===
+[![test](https://github.com/smirzaei/l3/actions/workflows/test.yml/badge.svg)](https://github.com/smirzaei/l3/actions/workflows/test.yml)
 
 An experimental request aware load balancer. This is useful if you are dealing with a custom TCP protocol. There is a catch though, both downstream (the clients) and upstream (servers) need to add the following header to every request/response, so that the load balancer knows the length of each message.
 
