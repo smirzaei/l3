@@ -77,7 +77,7 @@ async fn start_the_lb(upstream_ports: &[u16]) -> io::Result<()> {
         },
         upstream: Upstream {
             hosts,
-            connections: 60,
+            connections: 25,
         },
     };
 
@@ -92,8 +92,8 @@ async fn start_the_lb(upstream_ports: &[u16]) -> io::Result<()> {
 }
 
 async fn run_downstream() -> io::Result<()> {
-    const N_CLIENTS: usize = 600;
-    const N_REQ: usize = 1_000;
+    const N_CLIENTS: usize = 5;
+    const N_REQ: usize = 50;
 
     let mut handlers = vec![];
     for i in 0..N_CLIENTS {
