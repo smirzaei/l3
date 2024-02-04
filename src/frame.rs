@@ -1,6 +1,4 @@
-use anyhow::Result;
 use thiserror::Error;
-
 
 #[derive(Debug, Error)]
 pub enum FrameError {
@@ -31,10 +29,10 @@ impl Frame {
         }
     }
 
-    pub fn from_bytes(buff: &[u8; 8]) -> Result<Self> {
+    pub fn from_bytes(buff: &[u8; 8]) -> Result<Self, FrameError> {
         let version = buff[0];
         if version != 1 {
-            return Err(FrameError::InvalidVersion(version).into());
+            return Err(FrameError::InvalidVersion(version));
         }
 
         let msg_length = (buff[4] as u32)
@@ -43,7 +41,7 @@ impl Frame {
             | ((buff[7] as u32) << 24);
 
         if msg_length == 0 {
-            return Err(FrameError::ZeroMessageLength.into());
+            return Err(FrameError::ZeroMessageLength);
         }
 
         Ok(Frame {
@@ -66,13 +64,12 @@ mod test {
     use crate::frame::FrameError;
 
     use super::Frame;
-    use anyhow::{Ok, Result};
 
     #[test]
-    fn from_bytes_return_error_if_version_is_not_one() -> Result<()> {
+    fn from_bytes_return_error_if_version_is_not_one() -> Result<(), FrameError> {
         let b: [u8; 8] = [0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
         let result = Frame::from_bytes(&b);
-        match result.unwrap_err().downcast::<FrameError>().unwrap() {
+        match result.unwrap_err() {
             FrameError::InvalidVersion(0) => Ok(()),
             _ => {
                 panic!("invalid error");
@@ -81,10 +78,10 @@ mod test {
     }
 
     #[test]
-    fn from_bytes_return_error_if_message_len_is_zero() -> Result<()> {
+    fn from_bytes_return_error_if_message_len_is_zero() -> Result<(), FrameError> {
         let b: [u8; 8] = [0x01, 0x02, 0x03, 0x04, 0x00, 0x00, 0x00, 0x00];
         let result = Frame::from_bytes(&b);
-        match result.unwrap_err().downcast::<FrameError>().unwrap() {
+        match result.unwrap_err() {
             FrameError::ZeroMessageLength => Ok(()),
             _ => {
                 panic!("invalid error");
@@ -93,7 +90,7 @@ mod test {
     }
 
     #[test]
-    fn from_bytes_properly_constructs_a_frame() -> Result<()> {
+    fn from_bytes_properly_constructs_a_frame() -> Result<(), FrameError> {
         let b: [u8; 8] = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
         let expected = Frame {
             version: 1,
